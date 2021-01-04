@@ -2,11 +2,18 @@ import os
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+from dash.dependencies import Input, Output, State
 
 import requests
 import pandas as pd
 import numpy as np
+import redis
 
+from db import Redis
+
+redis = redis.Redis()
+db = Redis(redis)
+db.init_patients()
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -15,7 +22,7 @@ app.layout = html.Div(
     className='content',
     children=[
         # Store current person id
-        dcc.Store(id='current-id', storage_type='session'),
+        dcc.Store(id='current-person-id', storage_type='session'),
         # Store last anomaly
         dcc.Store(id='last-anomaly'),
 
@@ -27,12 +34,12 @@ app.layout = html.Div(
             dcc.Dropdown(
                 id='person-dropdown',
                 options=[
-                    {'label': 'Person 0', 'value': 0},
-                    {'label': 'Person 1', 'value': 1},
-                    {'label': 'Person 2', 'value': 2},
-                    {'label': 'Person 3', 'value': 3},
-                    {'label': 'Person 4', 'value': 4},
-                    {'label': 'Person 5', 'value': 5},
+                    {'label': 'Person 0', 'value': 1},
+                    {'label': 'Person 1', 'value': 2},
+                    {'label': 'Person 2', 'value': 3},
+                    {'label': 'Person 3', 'value': 4},
+                    {'label': 'Person 4', 'value': 5},
+                    {'label': 'Person 5', 'value': 6},
                 ],
                 placeholder='Select a person',
             ),
@@ -46,6 +53,13 @@ app.layout = html.Div(
             html.P('Made by: Łukasz Glapiak and Maciej Leszczyński')
         ])
     ])
+
+@app.callback([Output('current-person-id', 'data')],
+              [Input('person-dropdown', 'value')])
+def on_person_change(new_person_id):
+    print(new_person_id)
+    db.get_patient(new_person_id)
+    return new_person_id
 
 if __name__ == '__main__':
     app.run_server(debug=True)
