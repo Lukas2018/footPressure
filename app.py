@@ -16,11 +16,17 @@ from db import Redis
 redis = redis.Redis(decode_responses=True)
 db = Redis(redis)
 db.init_patients()
+db.save_users_sensor_values()
 
 #sensory zwraca
 def get_sensor_values(person_id):
-    r = requests.get("http://tesla.iem.pw.edu.pl:9080/v2/monitor/{}".format(person_id))
-    sensors = json.loads(r.content)['trace']['sensors']
+    sensors = []
+    sensors.append(db.get_user_sensor_values(person_id, 0, 1)[0])
+    sensors.append(db.get_user_sensor_values(person_id, 1, 1)[0])
+    sensors.append(db.get_user_sensor_values(person_id, 2, 1)[0])
+    sensors.append(db.get_user_sensor_values(person_id, 3, 1)[0])
+    sensors.append(db.get_user_sensor_values(person_id, 4, 1)[0])
+    sensors.append(db.get_user_sensor_values(person_id, 5, 1)[0])
     return sensors
     
 #ten obrazek stopy z sensorami na nim
@@ -100,12 +106,13 @@ app.layout = html.Div(
                     {'label': db.get_patient_personal_data(5), 'value': 5},
                     {'label': db.get_patient_personal_data(6), 'value': 6},
                 ],
-                placeholder='Select a person',
+                value='1',
+                placeholder='Select a person'
             ),
             html.Section(className='visualization-container', children=[
                 html.Div(className='foot-container'),
                 #niżej na razie przykładowe person id 1, potem z dropdown polaczymy
-                dcc.Graph(id='foot_image', config={'displayModeBar': False}, figure=feet_image(get_sensor_values(1)))
+                dcc.Graph(id='foot-image', config={'displayModeBar': False}, figure=feet_image(get_sensor_values(1)))
             ])
         ]),
 
@@ -121,10 +128,11 @@ app.layout = html.Div(
 def on_person_change(new_person_id):
     return new_person_id
 
-@app.callback(Output('foot_image', 'figure'),
+@app.callback(Output('foot-image', 'figure'),
 	Input('interval-component', 'n_intervals'))
 def update_foot_image(_):
-	return feet_image(get_sensor_values(1))
+    db.save_users_sensor_values() #tymczasowo
+    return feet_image(get_sensor_values(1))
 
 if __name__ == '__main__':
     app.run_server(debug=True)
