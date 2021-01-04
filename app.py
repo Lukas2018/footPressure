@@ -13,7 +13,7 @@ import plotly.graph_objects as go
 
 from db import Redis
 
-redis = redis.Redis()
+redis = redis.Redis(decode_responses=True)
 db = Redis(redis)
 db.init_patients()
 
@@ -72,7 +72,7 @@ def feet_image(sensors):
         )
     
     return fig
-    
+
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -93,12 +93,12 @@ app.layout = html.Div(
             dcc.Dropdown(
                 id='person-dropdown',
                 options=[
-                    {'label': 'Person 0', 'value': 1},
-                    {'label': 'Person 1', 'value': 2},
-                    {'label': 'Person 2', 'value': 3},
-                    {'label': 'Person 3', 'value': 4},
-                    {'label': 'Person 4', 'value': 5},
-                    {'label': 'Person 5', 'value': 6},
+                    {'label': db.get_patient_personal_data(1), 'value': 1},
+                    {'label': db.get_patient_personal_data(2), 'value': 2},
+                    {'label': db.get_patient_personal_data(3), 'value': 3},
+                    {'label': db.get_patient_personal_data(4), 'value': 4},
+                    {'label': db.get_patient_personal_data(5), 'value': 5},
+                    {'label': db.get_patient_personal_data(6), 'value': 6},
                 ],
                 placeholder='Select a person',
             ),
@@ -119,8 +119,6 @@ app.layout = html.Div(
 @app.callback([Output('current-person-id', 'data')],
               [Input('person-dropdown', 'value')])
 def on_person_change(new_person_id):
-    print(new_person_id)
-    db.get_patient(new_person_id)
     return new_person_id
 
 @app.callback(Output('foot_image', 'figure'),

@@ -17,6 +17,8 @@ class Redis(object):
                 self.redis.hset(table_name, 'lastname', content['lastname'])
                 self.redis.hset(table_name, 'fullname', content['firstname'] + ' ' + content['lastname'])
 
-    def get_patient(self, id):
-        print(self.redis.hgetall('user' + str(id)))
+    def get_patient_personal_data(self, id):
+        fullname = self.redis.hgetall('user' + str(id))['fullname']
+        birthdate = self.redis.hgetall('user' + str(id))['birthdate']
+        return fullname + ' ( ' + birthdate + ' )' 
 
