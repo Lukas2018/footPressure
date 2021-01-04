@@ -17,48 +17,6 @@ redis = redis.Redis()
 db = Redis(redis)
 db.init_patients()
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-
-app.layout = html.Div(
-    className='content',
-    children=[
-        # Store current person id
-        dcc.Store(id='current-person-id', storage_type='session'),
-        # Store last anomaly
-        dcc.Store(id='last-anomaly'),
-
-        dcc.Interval(id='interval-component',
-                     interval=1*1000,
-                     n_intervals=0),
-
-        html.Main(className='main-container', children=[
-            dcc.Dropdown(
-                id='person-dropdown',
-                options=[
-                    {'label': 'Person 0', 'value': 1},
-                    {'label': 'Person 1', 'value': 2},
-                    {'label': 'Person 2', 'value': 3},
-                    {'label': 'Person 3', 'value': 4},
-                    {'label': 'Person 4', 'value': 5},
-                    {'label': 'Person 5', 'value': 6},
-                ],
-                placeholder='Select a person',
-            ),
-            html.Section(className='visualization-container', children=[
-                html.Div(className='foot-container'),
-                #niżej na razie przykładowe person id 1, potem z dropdown polaczymy
-                dcc.Graph(id='foot_image', config={'displayModeBar': False}, figure=feet_image(get_sensor_values(1)))
-            ])
-        ]),
-
-        html.Footer(className='footer', children=[
-            html.P('PW EE 2020/2021'),
-            html.P('Made by: Łukasz Glapiak and Maciej Leszczyński')
-        ])
-    ])
-    
 #sensory zwraca
 def get_sensor_values(person_id):
     r = requests.get("http://tesla.iem.pw.edu.pl:9080/v2/monitor/{}".format(person_id))
@@ -114,6 +72,48 @@ def feet_image(sensors):
         )
     
     return fig
+    
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
+app.layout = html.Div(
+    className='content',
+    children=[
+        # Store current person id
+        dcc.Store(id='current-person-id', storage_type='session'),
+        # Store last anomaly
+        dcc.Store(id='last-anomaly'),
+
+        dcc.Interval(id='interval-component',
+                     interval=1*1000,
+                     n_intervals=0),
+
+        html.Main(className='main-container', children=[
+            dcc.Dropdown(
+                id='person-dropdown',
+                options=[
+                    {'label': 'Person 0', 'value': 1},
+                    {'label': 'Person 1', 'value': 2},
+                    {'label': 'Person 2', 'value': 3},
+                    {'label': 'Person 3', 'value': 4},
+                    {'label': 'Person 4', 'value': 5},
+                    {'label': 'Person 5', 'value': 6},
+                ],
+                placeholder='Select a person',
+            ),
+            html.Section(className='visualization-container', children=[
+                html.Div(className='foot-container'),
+                #niżej na razie przykładowe person id 1, potem z dropdown polaczymy
+                dcc.Graph(id='foot_image', config={'displayModeBar': False}, figure=feet_image(get_sensor_values(1)))
+            ])
+        ]),
+
+        html.Footer(className='footer', children=[
+            html.P('PW EE 2020/2021'),
+            html.P('Made by: Łukasz Glapiak and Maciej Leszczyński')
+        ])
+    ])
 
 #callbacks	
 @app.callback([Output('current-person-id', 'data')],
