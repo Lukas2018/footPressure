@@ -80,14 +80,14 @@ def feet_image(sensors):
     return fig
     
 
-def linear_graph(sensors):
-	fig = go.Figure()
-	
-	for sensor in sensors:
-		#o tu czas potrzebny, albo numer pomiaru przeszłego
-		fig.add_trace(go.Scatter(x=, y=np.array(sensor['value'])))
-	
-	return fig
+def linear_graph():
+    fig = go.Figure()
+    for sensor in range(1, 7):
+        user = 1 #połączyć z dropdown
+        n = 10 #ile wstecz
+        values = db.get_user_sensor_values(user, sensor, n)
+        #fig.add_trace(go.Scatter(x=0, y=np.array(sensor['value'])))
+    return fig
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -123,7 +123,7 @@ app.layout = html.Div(
                 html.Div(className='foot-container'),
                 #niżej na razie przykładowe person id 1, potem z dropdown polaczymy
                 dcc.Graph(id='foot-image', config={'displayModeBar': False}, figure=feet_image(get_sensor_values(1))),
-                dcc.Graph(id='linear-graph', figure=linear_graph(get_sensor_values(1)))
+                dcc.Graph(id='linear-graph', figure=linear_graph())
             ])
         ]),
 		html.Footer(className='footer', children=[

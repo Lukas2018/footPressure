@@ -1,6 +1,7 @@
 import redis
 import requests
 import json
+from datetime import datetime
 
 class Redis(object):
     def __init__(self, redis_store):
@@ -32,12 +33,17 @@ class Redis(object):
                 for j in range(len(content)):
                     table_name = 'user' + str(i) + 'sensor' + str(content[j]['id']) + 'measurment' + str(self.measurments_count)
                     self.redis.hset(table_name, 'anomaly', int(content[j]['anomaly']))
+                    self.redis.hset(table_name, 'date', datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
                     self.redis.hset(table_name, 'name', content[j]['name'])
                     self.redis.hset(table_name, 'value', int(content[j]['value']))
 
     def get_user_sensor_values(self, user_id, sensor_id, count):
         data = []
-        for i in range (self.measurments_count - count, self.measurments_count):
+        left = self.measurments_count - count
+        right = self.measurments_count
+        if left < 0:
+            left = 1
+        for i in range (left, right):
             table_name = 'user' + str(user_id) + 'sensor' + str(sensor_id) + 'measurment' + str(i + 1)
             data.append(self.redis.hgetall(table_name))
         return data
