@@ -1,8 +1,9 @@
 import os
 import dash
+import dash_table
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 
 import requests
 import json
@@ -11,10 +12,12 @@ import numpy as np
 import redis
 import plotly.graph_objects as go
 
+from statistics import Stats
 from db import Redis
 
 redis = redis.Redis(decode_responses=True)
 db = Redis(redis)
+stat = Stats(db)
 db.init_patients()
 db.save_users_sensor_values()
 
@@ -120,8 +123,79 @@ app.layout = html.Div(
                 placeholder='Select a person'
             ),
             html.Section(className='visualization-container', children=[
-                html.Div(className='foot-container'),
                 #niżej na razie przykładowe person id 1, potem z dropdown polaczymy
+                dash_table.DataTable(
+                    id='stat-data-table',
+                    style_cell={
+                        'textAlign': 'center',
+                        'maxWidth': 0
+                    },
+                    columns=[{
+                        'name': '',
+                        'id': 'stat-name'
+                    },    
+                    {
+                        'name': 'L1',
+                        'id': 'l1'
+                    }, 
+                    {
+                        'name': 'L2',
+                        'id': 'l2'
+                    },
+                    {
+                        'name': 'L3',
+                        'id': 'l3'
+                    },
+                    {
+                        'name': 'R1',
+                        'id': 'r1'
+                    },
+                    {
+                        'name': 'R2',
+                        'id': 'r2'
+                    },
+                    {
+                        'name': 'R3',
+                        'id': 'r3'
+                    }],
+                    data=[{
+                        'stat-name': 'Minimum',
+                        'l1': 11,
+                        'l2': 12,
+                        'l3': 13,
+                        'r1': 14,
+                        'r2': 15,
+                        'r3': 16
+                    },
+                    {
+                        'stat-name': 'Maximum',
+                        'l1': 16,
+                        'l2': 15,
+                        'l3': 14,
+                        'r1': 13,
+                        'r2': 12,
+                        'r3': 11
+                    },
+                    {
+                        'stat-name': 'Mean',
+                        'l1': 13,
+                        'l2': 13,
+                        'l3': 13,
+                        'r1': 13,
+                        'r2': 13,
+                        'r3': 13
+                    },
+                    {
+                        'stat-name': 'Root Mean Square',
+                        'l1': 1,
+                        'l2': 2,
+                        'l3': 3,
+                        'r1': 4,
+                        'r2': 5,
+                        'r3': 6
+                    }]
+                ),
+                html.Div(className='foot-container'),
                 dcc.Graph(id='foot-image', config={'displayModeBar': False}, figure=feet_image(get_sensor_values(1))),
                 dcc.Graph(id='linear-graph', figure=linear_graph())
             ])
@@ -133,10 +207,18 @@ app.layout = html.Div(
     ])
 
 #callbacks	
-@app.callback([Output('current-person-id', 'data')],
-              [Input('person-dropdown', 'value')])
+@app.callback(Output('current-person-id', 'data'),
+    Input('person-dropdown', 'value'))
 def on_person_change(new_person_id):
     return new_person_id
+
+@app.callback(Output('stat-data-table', 'data'),
+    Input('interval-component', 'n_intervals'),
+    [State('stat-data-table', 'data'), State('stat-data-table', 'columns')]
+)
+def updateData(n, data, columns):
+    
+    return data
 
 @app.callback(Output('foot-image', 'figure'),
 	Input('interval-component', 'n_intervals'))
@@ -147,7 +229,7 @@ def update_foot_image(_):
 @app.callback(Output('linear-graph', 'figure'),
 	Input('interval-component', 'n_intervals'))
 def update_linear_graph(_):
-	return linear_graph(get_sensor_values(1))
+	return linear_graph()
 
 if __name__ == '__main__':
     app.run_server(debug=True)
