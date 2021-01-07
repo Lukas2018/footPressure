@@ -1,0 +1,18 @@
+.foot-anomaly-container {
+    display: flex;
+    justify-content: space-around;
+}
+.anomaly-container {
+    align-self: center;
+}
+.anomaly-container div {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.anomaly-container div p:last-child {
+    font-weight: bold;
+    font-size: large;
+    color: red;
+    text-align: center;
+}

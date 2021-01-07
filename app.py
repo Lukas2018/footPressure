@@ -205,8 +205,36 @@ app.layout = html.Div(
                         'r3': 6
                     }]
                 ),
-                html.Div(className='foot-container'),
-                dcc.Graph(id='foot-image', config={'displayModeBar': False}, figure=feet_image(get_sensor_values(1))),
+                html.Div(className='foot-anomaly-container', children=[
+                    dcc.Graph(id='foot-image', config={'displayModeBar': False}, figure=feet_image(get_sensor_values(1))),
+                    html.Div(className='anomaly-container', children=[
+                        html.H3('Anomaly counter'),
+                        html.Div(children=[
+                            html.P('L1:'),
+                            html.P('56')
+                        ]),
+                        html.Div(children=[
+                            html.P('L2:'),
+                            html.P('26')
+                        ]),
+                        html.Div(children=[
+                            html.P('L3:'),
+                            html.P('16')
+                        ]),
+                        html.Div(children=[
+                            html.P('L4:'),
+                            html.P('45')
+                        ]),
+                        html.Div(children=[
+                            html.P('L5:'),
+                            html.P('12')
+                        ]),
+                        html.Div(children=[
+                            html.P('L6:'),
+                            html.P('14')
+                        ]),
+                    ])
+                ]),
                 dcc.Dropdown(
 					options=[
 						{'label': 'Sensor 1', 'value': '1'},
