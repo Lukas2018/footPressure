@@ -47,7 +47,7 @@ def feet_image(sensors):
             opacity=1.0,
             layer="below",
             sizing="stretch",
-            source="stopa.png")
+            source=app.get_asset_url('stopa.png'))
     )
     
     fig.update_xaxes(
@@ -78,6 +78,16 @@ def feet_image(sensors):
         )
     
     return fig
+    
+
+def linear_graph(sensors):
+	fig = go.Figure()
+	
+	for sensor in sensors:
+		#o tu czas potrzebny, albo numer pomiaru przeszłego
+		fig.add_trace(go.Scatter(x=, y=np.array(sensor['value'])))
+	
+	return fig
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -112,11 +122,11 @@ app.layout = html.Div(
             html.Section(className='visualization-container', children=[
                 html.Div(className='foot-container'),
                 #niżej na razie przykładowe person id 1, potem z dropdown polaczymy
-                dcc.Graph(id='foot-image', config={'displayModeBar': False}, figure=feet_image(get_sensor_values(1)))
+                dcc.Graph(id='foot-image', config={'displayModeBar': False}, figure=feet_image(get_sensor_values(1))),
+                dcc.Graph(id='linear-graph', figure=linear_graph(get_sensor_values(1)))
             ])
         ]),
-
-        html.Footer(className='footer', children=[
+		html.Footer(className='footer', children=[
             html.P('PW EE 2020/2021'),
             html.P('Made by: Łukasz Glapiak and Maciej Leszczyński')
         ])
@@ -133,6 +143,11 @@ def on_person_change(new_person_id):
 def update_foot_image(_):
     db.save_users_sensor_values() #tymczasowo
     return feet_image(get_sensor_values(1))
+    
+@app.callback(Output('linear-graph', 'figure'),
+	Input('interval-component', 'n_intervals'))
+def update_linear_graph(_):
+	return linear_graph(get_sensor_values(1))
 
 if __name__ == '__main__':
     app.run_server(debug=True)
