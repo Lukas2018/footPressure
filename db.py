@@ -25,7 +25,6 @@ class Redis(object):
         return fullname + ' ( ' + birthdate + ' )'
 
     def save_users_sensor_values(self):
-        self.measurments_count = self.measurments_count + 1
         for i in range (1, 7):
             r = requests.get('http://tesla.iem.pw.edu.pl:9080/v2/monitor/' + str(i))
             if r.status_code == 200:
@@ -36,15 +35,16 @@ class Redis(object):
                     self.redis.hset(table_name, 'date', datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
                     self.redis.hset(table_name, 'name', content[j]['name'])
                     self.redis.hset(table_name, 'value', int(content[j]['value']))
+        self.measurments_count = self.measurments_count + 1
 
     def get_user_sensor_values(self, user_id, sensor_id, count):
         data = []
         left = self.measurments_count - count
         right = self.measurments_count
         if left < 0:
-            left = 1
+            left = 0
         for i in range (left, right):
-            table_name = 'user' + str(user_id) + 'sensor' + str(sensor_id) + 'measurment' + str(i + 1)
+            table_name = 'user' + str(user_id) + 'sensor' + str(sensor_id) + 'measurment' + str(i)
             data.append(self.redis.hgetall(table_name))
         return data
 

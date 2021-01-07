@@ -32,6 +32,12 @@ def get_sensor_values(person_id):
     sensors.append(db.get_user_sensor_values(person_id, 5, 1)[0])
     return sensors
     
+v1, v2, v3, v4, v5, v6 = [], [], [], [], [], []
+t1, t2, t3, t4, t5, t6 = [], [], [], [], [], []
+temp_values = [v1, v2, v3, v4, v5, v6]
+temp_dates = [t1, t2, t3, t4, t5, t6]
+
+    
 #ten obrazek stopy z sensorami na nim
 def feet_image(sensors):
     img_width = 500
@@ -82,14 +88,18 @@ def feet_image(sensors):
     
     return fig
     
-
 def linear_graph():
     fig = go.Figure()
-    for sensor in range(1, 7):
+    for i in range(0, 6):
         user = 1 #połączyć z dropdown
-        n = 10 #ile wstecz
-        values = db.get_user_sensor_values(user, sensor, n)
-        #fig.add_trace(go.Scatter(x=0, y=np.array(sensor['value'])))
+        n = 1 #ile wstecz
+        values = db.get_user_sensor_values(user, i, n)
+        temp_values[i].append(values[0]['value'])
+        temp_dates[i].append(values[0]['date'])
+        fig.add_trace(go.Scatter(x=temp_dates[i], y=temp_values[i]))
+        
+    fig.update_xaxes(
+			tickangle = 55)
     return fig
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -197,6 +207,18 @@ app.layout = html.Div(
                 ),
                 html.Div(className='foot-container'),
                 dcc.Graph(id='foot-image', config={'displayModeBar': False}, figure=feet_image(get_sensor_values(1))),
+                dcc.Dropdown(
+					options=[
+						{'label': 'Sensor 1', 'value': '1'},
+						{'label': 'Sensor 2', 'value': '2'},
+						{'label': 'Sensor 3', 'value': '3'},
+						{'label': 'Sensor 4', 'value': '4'},
+						{'label': 'Sensor 5', 'value': '5'},
+						{'label': 'Sensor 6', 'value': '6'},
+					],
+					value=['1', '2', '3', '4', '5', '6'],
+					multi=True
+				),
                 dcc.Graph(id='linear-graph', figure=linear_graph())
             ])
         ]),
