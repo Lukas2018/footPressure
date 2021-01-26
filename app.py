@@ -24,19 +24,10 @@ db.save_users_sensor_values()
 #sensory zwraca
 def get_sensor_values(person_id):
     sensors = []
-    sensors.append(db.get_user_sensor_values(person_id, 0, 1)[0])
-    sensors.append(db.get_user_sensor_values(person_id, 1, 1)[0])
-    sensors.append(db.get_user_sensor_values(person_id, 2, 1)[0])
-    sensors.append(db.get_user_sensor_values(person_id, 3, 1)[0])
-    sensors.append(db.get_user_sensor_values(person_id, 4, 1)[0])
-    sensors.append(db.get_user_sensor_values(person_id, 5, 1)[0])
-    return sensors
-    
-v1, v2, v3, v4, v5, v6 = [], [], [], [], [], []
-t1, t2, t3, t4, t5, t6 = [], [], [], [], [], []
-temp_values = [v1, v2, v3, v4, v5, v6]
-temp_dates = [t1, t2, t3, t4, t5, t6]
+    for i in range(0, 6):
+        sensors.append(db.get_user_sensor_values(person_id, i, 1)[0])
 
+    return sensors
     
 #ten obrazek stopy z sensorami na nim
 def feet_image(sensors):
@@ -87,20 +78,22 @@ def feet_image(sensors):
         )
     
     return fig
-    
-def linear_graph():
-    fig = go.Figure()
-    for i in range(0, 6):
-        user = 1 #połączyć z dropdown
-        n = 1 #ile wstecz
-        values = db.get_user_sensor_values(user, i, n)
-        temp_values[i].append(values[0]['value'])
-        temp_dates[i].append(values[0]['date'])
-        fig.add_trace(go.Scatter(x=temp_dates[i], y=temp_values[i]))
-        
-    fig.update_xaxes(
-			tickangle = 55)
-    return fig
+  
+
+def linear_graph(person_id, sensor_values, n):
+	fig = go.Figure()
+	tmp_values = []
+	tmp_dates = []
+	print(n)
+	for sensor_value in sensor_values:
+		tmp_values.append(db.get_user_sensor_values(person_id, sensor_value, 1)[n]['value'])
+		print(tmp_values)
+		tmp_dates.append(db.get_user_sensor_values(person_id, sensor_value, 1)[n]['date'])
+		fig.add_trace(go.Scatter(x=tmp_dates, y=tmp_values))
+ 
+	fig.update_xaxes(
+		tickangle = 55)
+	return fig
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -129,7 +122,7 @@ app.layout = html.Div(
                     {'label': db.get_patient_personal_data(5), 'value': 5},
                     {'label': db.get_patient_personal_data(6), 'value': 6},
                 ],
-                value='1',
+                value=1,
                 placeholder='Select a person'
             ),
             html.Section(className='visualization-container', children=[
@@ -236,18 +229,20 @@ app.layout = html.Div(
                     ])
                 ]),
                 dcc.Dropdown(
+					id='sensor-dropdown',
 					options=[
-						{'label': 'Sensor 1', 'value': '1'},
-						{'label': 'Sensor 2', 'value': '2'},
-						{'label': 'Sensor 3', 'value': '3'},
-						{'label': 'Sensor 4', 'value': '4'},
-						{'label': 'Sensor 5', 'value': '5'},
-						{'label': 'Sensor 6', 'value': '6'},
+						{'label': 'Sensor 1', 'value': 0},
+						{'label': 'Sensor 2', 'value': 1},
+						{'label': 'Sensor 3', 'value': 2},
+						{'label': 'Sensor 4', 'value': 3},
+						{'label': 'Sensor 5', 'value': 4},
+						{'label': 'Sensor 6', 'value': 5},
 					],
-					value=['1', '2', '3', '4', '5', '6'],
+					value=[0, 1, 2, 3, 4, 5],
 					multi=True
 				),
-                dcc.Graph(id='linear-graph', figure=linear_graph())
+                #dcc.Graph(id='linear-graph', figure=linear_graph(1, [0, 1, 2, 3, 4, 5]))
+                dcc.Graph(id='linear-graph')
             ])
         ]),
 		html.Footer(className='footer', children=[
@@ -260,7 +255,7 @@ app.layout = html.Div(
 @app.callback(Output('current-person-id', 'data'),
     Input('person-dropdown', 'value'))
 def on_person_change(new_person_id):
-    return new_person_id
+	return new_person_id
 
 @app.callback(Output('stat-data-table', 'data'),
     Input('interval-component', 'n_intervals'),
@@ -271,15 +266,18 @@ def updateData(n, data, columns):
     return data
 
 @app.callback(Output('foot-image', 'figure'),
-	Input('interval-component', 'n_intervals'))
-def update_foot_image(_):
+	[Input('interval-component', 'n_intervals'),
+	Input('person-dropdown', 'value')])
+def update_foot_image(_, dropdown_value):
     db.save_users_sensor_values() #tymczasowo
-    return feet_image(get_sensor_values(1))
+    return feet_image(get_sensor_values(dropdown_value))
     
 @app.callback(Output('linear-graph', 'figure'),
-	Input('interval-component', 'n_intervals'))
-def update_linear_graph(_):
-	return linear_graph()
+	[Input('interval-component', 'n_intervals'),
+    Input('person-dropdown', 'value'),
+    Input('sensor-dropdown', 'value')])
+def update_linear_graph(_, dropdown_value, sensor_dropdown_value):
+	return linear_graph(dropdown_value, sensor_dropdown_value, (_+1))
 
 if __name__ == '__main__':
     app.run_server(debug=True)
