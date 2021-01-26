@@ -15,7 +15,8 @@ import plotly.graph_objects as go
 from statistics import Stats
 from db import Redis
 
-redis = redis.Redis(decode_responses=True)
+REDIS_NAME = os.getenv('REDIS_NAME') or 'localhost'
+redis = redis.Redis(REDIS_NAME, decode_responses=True)
 db = Redis(redis)
 stat = Stats(db)
 db.init_patients()
@@ -280,4 +281,4 @@ def update_linear_graph(_, dropdown_value, sensor_dropdown_value):
 	return linear_graph(dropdown_value, sensor_dropdown_value, (_+1))
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(host='0.0.0.0', debug=True)
