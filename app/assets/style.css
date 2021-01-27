@@ -16,3 +16,11 @@
     color: red;
     text-align: center;
 }
+
+.footer {
+    text-align: center;
+}
+
+.footer p:first-child {
+    font-weight: 700;
+}

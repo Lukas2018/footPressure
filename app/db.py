@@ -9,6 +9,9 @@ class Redis(object):
         self.config = config
         self.measurments_count = 0
 
+    def get_measurments_count(self):
+        return self.measurments_count
+        
     def init_patients(self):
         for i in range (1, self.config.get_patients_number() + 1):
             r = requests.get('http://tesla.iem.pw.edu.pl:9080/v2/monitor/' + str(i))

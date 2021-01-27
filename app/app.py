@@ -84,10 +84,9 @@ def feet_image(sensors):
 def fetch_data(person_id, n):
 	data = []
 	dates = []
-	for sensor in range(0, 6):
+	for sensor in range(0, config.get_sensors_number()):
 		data.append(db.get_user_sensor_data(person_id, sensor, n, 'value'))
 		dates.append(db.get_user_sensor_data(person_id, sensor, n, 'date'))
-	
 	return [data, dates]
 		
 def linear_graph(person_id, sensor_values, n, values):
@@ -119,7 +118,7 @@ app.layout = html.Div(
                      interval=1*2000,
                      n_intervals=0),
         dcc.Interval(id='download-component',
-                     interval=1*1000,
+                     interval=1*500,
                      n_intervals=0),
 
         html.Main(className='main-container', children=[
@@ -150,63 +149,63 @@ app.layout = html.Div(
                     },    
                     {
                         'name': 'L1',
-                        'id': 'l1'
+                        'id': '0'
                     }, 
                     {
                         'name': 'L2',
-                        'id': 'l2'
+                        'id': '1'
                     },
                     {
                         'name': 'L3',
-                        'id': 'l3'
+                        'id': '2'
                     },
                     {
                         'name': 'R1',
-                        'id': 'r1'
+                        'id': '3'
                     },
                     {
                         'name': 'R2',
-                        'id': 'r2'
+                        'id': '4'
                     },
                     {
                         'name': 'R3',
-                        'id': 'r3'
+                        'id': '5'
                     }],
                     data=[{
                         'stat-name': 'Minimum',
-                        'l1': 11,
-                        'l2': 12,
-                        'l3': 13,
-                        'r1': 14,
-                        'r2': 15,
-                        'r3': 16
+                        '0': 1023,
+                        '1': 1023,
+                        '2': 1023,
+                        '3': 1023,
+                        '4': 1023,
+                        '5': 1023
                     },
                     {
                         'stat-name': 'Maximum',
-                        'l1': 16,
-                        'l2': 15,
-                        'l3': 14,
-                        'r1': 13,
-                        'r2': 12,
-                        'r3': 11
+                        '0': 1023,
+                        '1': 1023,
+                        '2': 1023,
+                        '3': 1023,
+                        '4': 1023,
+                        '5': 1023
                     },
                     {
                         'stat-name': 'Mean',
-                        'l1': 13,
-                        'l2': 13,
-                        'l3': 13,
-                        'r1': 13,
-                        'r2': 13,
-                        'r3': 13
+                        '0': 1023,
+                        '1': 1023,
+                        '2': 1023,
+                        '3': 1023,
+                        '4': 1023,
+                        '5': 1023
                     },
                     {
                         'stat-name': 'Root Mean Square',
-                        'l1': 1,
-                        'l2': 2,
-                        'l3': 3,
-                        'r1': 4,
-                        'r2': 5,
-                        'r3': 6
+                        '0': 1023,
+                        '1': 1023,
+                        '2': 1023,
+                        '3': 1023,
+                        '4': 1023,
+                        '5': 1023
                     }]
                 ),
                 html.Div(className='foot-anomaly-container', children=[
@@ -269,11 +268,19 @@ def on_person_change(new_person_id):
 	return new_person_id
 
 @app.callback(Output('stat-data-table', 'data'),
-    Input('update-component', 'n_intervals'),
+    [Input('update-component', 'n_intervals'),
+    Input('person-dropdown', 'value')],
     [State('stat-data-table', 'data'), State('stat-data-table', 'columns')]
 )
-def updateData(n, data, columns):
-    
+def updateData(n, person_id, data, columns):
+    for i in range(0, config.get_sensors_number()):
+        data[0][str(i)] = stat.min(person_id, i)
+    for i in range(0, config.get_sensors_number()):
+        data[1][str(i)] = stat.max(person_id, i)
+    for i in range(0, config.get_sensors_number()):
+        data[2][str(i)] = stat.mean(person_id, i)
+    for i in range(0, config.get_sensors_number()):
+        data[3][str(i)] = stat.rms(person_id, i)
     return data
 
 @app.callback(Output('foot-image', 'figure'),
