@@ -1,26 +1,11 @@
-.foot-anomaly-container {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 20px;
-}
-.anomaly-container {
-    align-self: center;
-}
-
-.anomaly-container div {
-    display: flex;
-    justify-content: space-evenly;
-}
-
-.anomaly-container div p:last-child {
-    font-weight: bold;
-    font-size: large;
-    color: red;
-    text-align: center;
-}
-
 #person-dropdown {
     margin-bottom: 20px;
+}
+
+.visualization-container label {
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 10px;
 }
 
 #stat-data-table {
@@ -30,6 +15,12 @@
 }
 
 #linear-graph {
+    margin-bottom: 20px;
+}
+
+.foot-anomaly-container {
+    display: flex;
+    justify-content: space-around;
     margin-bottom: 20px;
 }
 

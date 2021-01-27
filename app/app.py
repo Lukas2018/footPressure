@@ -109,7 +109,7 @@ def anomaly_histogram(person_id):
 	fig = go.Figure()
 	fig.add_trace(go.Bar(x=sensor_names, y=anomalies, marker_color='indianred'))
 	
-	fig.update_layout(width = 600, title='Anomaly histogram')
+	fig.update_layout(width = 600, title='Anomaly histogram counter')
 	
 	return fig
 
@@ -141,6 +141,7 @@ app.layout = html.Div(
                 clearable=False,
             ),
             html.Section(className='visualization-container', children=[
+                html.Label('Statistical data about sensors value'),
                 dash_table.DataTable(
                     id='stat-data-table',
                     style_cell={
@@ -226,8 +227,10 @@ app.layout = html.Div(
 					multi=True
 				),
                 dcc.Graph(id='linear-graph'),
-                dcc.Graph(id='foot-image', config={'displayModeBar': False}, figure=feet_image(get_sensor_values(1))),
-                dcc.Graph(id='histogram')
+                html.Div(className='foot-anomaly-container', children=[
+                    dcc.Graph(id='foot-image', config={'displayModeBar': False}, figure=feet_image(get_sensor_values(1))),
+                    dcc.Graph(id='histogram')
+                ])
             ])
         ]),
         html.Div(id='hidden-div', style={'display':'none'}),
