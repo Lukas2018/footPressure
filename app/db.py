@@ -28,34 +28,36 @@ class Redis(object):
         data = []
         ok = True
         for i in range (1, self.config.get_patients_number() + 1):
+            r = None
             try:
                 r = requests.get('http://tesla.iem.pw.edu.pl:9080/v2/monitor/' + str(i), timeout=5)
-                n = self.redis.llen(str(i)) + 1
-                if r.status_code == 200:
-                    content = json.loads(r.content)['trace']['sensors']
-                    data = {
-                        str(n): {}
-                    }
-                    for j in range(len(content)):
-                        data[str(n)][str(j)] = {}
-                        data[str(n)][str(j)] = {}
-                        data[str(n)][str(j)] = {}
-                        data[str(n)][str(j)] = {}
-                    for j in range(len(content)):
-                        data[str(n)][str(j)]['anomaly'] = int(content[j]['anomaly'])
-                        data[str(n)][str(j)]['date'] = datetime.now().strftime('%H:%M:%S')
-                        data[str(n)][str(j)]['name'] = content[j]['name']
-                        data[str(n)][str(j)]['value'] = int(content[j]['value'])
-                        if data[str(n)][str(j)]['anomaly'] == 1:
-                            number = self.redis.hget('anomaly', str(j))
-                            if number == None:
-                                number = 1
-                            else:
-                                number = int(number) + 1
-                            self.redis.hset('anomaly', str(j), number)
-                    self.redis.rpush(str(i), json.dumps(data))
             except requests.ConnectionError:
                 return
+            n = self.redis.llen(str(i)) + 1
+            if r.status_code == 200:
+                content = json.loads(r.content)['trace']['sensors']
+                data = {
+                    str(n): {}
+                }
+                for j in range(len(content)):
+                    data[str(n)][str(j)] = {}
+                    data[str(n)][str(j)] = {}
+                    data[str(n)][str(j)] = {}
+                    data[str(n)][str(j)] = {}
+                for j in range(len(content)):
+                    data[str(n)][str(j)]['anomaly'] = int(content[j]['anomaly'])
+                    data[str(n)][str(j)]['date'] = datetime.now().strftime('%H:%M:%S')
+                    data[str(n)][str(j)]['name'] = content[j]['name']
+                    data[str(n)][str(j)]['value'] = int(content[j]['value'])
+                    if data[str(n)][str(j)]['anomaly'] == 1:
+                        table_name = 'anomaly' + str(i)
+                        number = self.redis.hget(table_name, str(j))
+                        if number == None:
+                            number = 1
+                        else:
+                            number = int(number) + 1
+                        self.redis.hset(table_name, str(j), number)
+                self.redis.rpush(str(i), json.dumps(data))
 
     def get_user_sensor_data(self, person_id, sensor_id, count=None, key=None):
         data = []
@@ -77,10 +79,11 @@ class Redis(object):
                 results.append(values[str(sensor_id)][key])
         return results
 
-    def get_anomaly_counts(self):
+    def get_anomaly_counts(self, person_id):
         results = []
         for i in range(self.config.get_sensors_number()):
-            number = self.redis.hget('anomaly', str(i))
+            table_name = 'anomaly' + str(person_id)
+            number = self.redis.hget(table_name, str(i))
             if number == None:
                 number = 0
             results.append(number)
