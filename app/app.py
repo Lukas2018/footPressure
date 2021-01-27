@@ -29,7 +29,7 @@ def get_sensor_values(person_id):
     sensors = []
     for i in range(0, config.get_sensors_number()):
         sensors.append(db.get_user_sensor_data(person_id, i, 1)[0])
-    print('sen2{}'.format(db.get_user_sensors_data(person_id, 3, 'value'))) # tu masz wszystki wartości z sensorów w danej chwili czasu
+    #print('sen2{}'.format(db.get_user_sensors_data(person_id, 3, 'value'))) # tu masz wszystki wartości z sensorów w danej chwili czasu
     return sensors
     
 #ten obrazek stopy z sensorami na nim
@@ -85,12 +85,10 @@ def feet_image(sensors):
 
 def linear_graph(person_id, sensor_values, n):
 	fig = go.Figure()
-	tmp_values = []
-	tmp_dates = []
-	for sensor_value in sensor_values:
-		tmp_values.append(db.get_user_sensor_data(person_id, sensor_value, 1)[n]['value'])
-		tmp_dates.append(db.get_user_sensor_data(person_id, sensor_value, 1)[n]['date'])
-		fig.add_trace(go.Scatter(x=tmp_dates, y=tmp_values))
+	for sensor in sensor_values:
+		data = db.get_user_sensor_data(person_id, sensor, n, 'value')
+		dates = db.get_user_sensor_data(person_id, sensor, n, 'date')
+		fig.add_trace(go.Scatter(x=dates, y=data))
  
 	fig.update_xaxes(
 		tickangle = 55)
