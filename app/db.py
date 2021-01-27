@@ -4,12 +4,13 @@ import json
 from datetime import datetime
 
 class Redis(object):
-    def __init__(self, redis_store):
+    def __init__(self, redis_store, config):
         self.redis = redis_store
+        self.config = config
         self.measurments_count = 0
 
     def init_patients(self):
-        for i in range (1, 7):
+        for i in range (1, self.config.get_patients_number() + 1):
             r = requests.get('http://tesla.iem.pw.edu.pl:9080/v2/monitor/' + str(i))
             if r.status_code == 200:
                 content = json.loads(r.content)
@@ -25,7 +26,7 @@ class Redis(object):
         return fullname + ' ( ' + birthdate + ' )'
 
     def save_users_sensor_values(self):
-        for i in range (1, 7):
+        for i in range (1, self.config.get_patients_number() + 1):
             r = requests.get('http://tesla.iem.pw.edu.pl:9080/v2/monitor/' + str(i))
             if r.status_code == 200:
                 content = json.loads(r.content)['trace']['sensors']
@@ -37,7 +38,7 @@ class Redis(object):
                     self.redis.hset(table_name, 'value', int(content[j]['value']))
         self.measurments_count = self.measurments_count + 1
 
-    def get_user_sensor_values(self, user_id, sensor_id, count):
+    def get_user_sensor_data(self, user_id, sensor_id, count, key=None):
         data = []
         left = self.measurments_count - count
         right = self.measurments_count
@@ -45,6 +46,24 @@ class Redis(object):
             left = 0
         for i in range (left, right):
             table_name = 'user' + str(user_id) + 'sensor' + str(sensor_id) + 'measurment' + str(i)
-            data.append(self.redis.hgetall(table_name))
+            if key is None:
+                data.append(self.redis.hgetall(table_name))
+            else:
+                data.append(self.redis.hgetall(table_name)[key])
+        return data
+
+    def get_user_sensors_data(self, user_id, count, key=None):
+        data = []
+        left = self.measurments_count - count
+        right = self.measurments_count
+        if left < 0:
+            left = 0
+        for i in range (left, right):
+            for j in range(0, self.config.get_sensors_number()):
+                table_name = 'user' + str(user_id) + 'sensor' + str(j) + 'measurment' + str(i)
+                if key is None:
+                    data.append(self.redis.hgetall(table_name))
+                else:
+                    data.append(self.redis.hgetall(table_name)[key])
         return data
 

@@ -14,10 +14,12 @@ import plotly.graph_objects as go
 
 from statistics import Stats
 from db import Redis
+from config import Config
 
 REDIS_NAME = os.getenv('REDIS_NAME') or 'localhost'
 redis = redis.Redis(REDIS_NAME, decode_responses=True)
-db = Redis(redis)
+config = Config(6, 6)
+db = Redis(redis, config)
 stat = Stats(db)
 db.init_patients()
 db.save_users_sensor_values()
@@ -25,9 +27,9 @@ db.save_users_sensor_values()
 #sensory zwraca
 def get_sensor_values(person_id):
     sensors = []
-    for i in range(0, 6):
-        sensors.append(db.get_user_sensor_values(person_id, i, 1)[0])
-
+    for i in range(0, config.get_sensors_number()):
+        sensors.append(db.get_user_sensor_data(person_id, i, 1)[0])
+    print('sen2{}'.format(db.get_user_sensors_data(person_id, 3, 'value'))) # tu masz wszystki wartości z sensorów w danej chwili czasu
     return sensors
     
 #ten obrazek stopy z sensorami na nim
@@ -70,7 +72,7 @@ def feet_image(sensors):
 
     
     positions = [(335, 420), (165, 420), (60, 350), (440, 350), (140, 60), (360, 60)]
-    for i in range(0, 6):
+    for i in range(0, config.get_sensors_number()):
         fig.add_trace(
             go.Scatter(
                 x=[positions[i][0]], y=[positions[i][1]], mode="markers+text", marker = dict(size = 40),
@@ -85,11 +87,9 @@ def linear_graph(person_id, sensor_values, n):
 	fig = go.Figure()
 	tmp_values = []
 	tmp_dates = []
-	print(n)
 	for sensor_value in sensor_values:
-		tmp_values.append(db.get_user_sensor_values(person_id, sensor_value, 1)[n]['value'])
-		print(tmp_values)
-		tmp_dates.append(db.get_user_sensor_values(person_id, sensor_value, 1)[n]['date'])
+		tmp_values.append(db.get_user_sensor_data(person_id, sensor_value, 1)[n]['value'])
+		tmp_dates.append(db.get_user_sensor_data(person_id, sensor_value, 1)[n]['date'])
 		fig.add_trace(go.Scatter(x=tmp_dates, y=tmp_values))
  
 	fig.update_xaxes(
