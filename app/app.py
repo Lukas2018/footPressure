@@ -68,7 +68,6 @@ def feet_image(sensors):
         height=img_height,
         margin={"l": 0, "r": 0, "t": 0, "b": 0},
     )
-
     
     positions = [(335, 420), (165, 420), (60, 350), (440, 350), (140, 60), (360, 60)]
     for i in range(0, config.get_sensors_number()):
@@ -89,13 +88,11 @@ def fetch_data(person_id, n):
 		dates.append(db.get_user_sensor_data(person_id, sensor, n, 'date'))
 	return [data, dates]
 		
-def linear_graph(person_id, sensor_values, n, values):
+def linear_graph(sensor_values, values):
 	data = values[0]
 	dates = values[1]
 	fig = go.Figure()
 	for sensor in sensor_values:
-		#data = db.get_user_sensor_data(person_id, sensor, 5, 'value')
-		#dates = db.get_user_sensor_data(person_id, sensor, 5, 'date')
 		fig.add_trace(go.Scatter(x=dates[sensor], y=data[sensor], line_shape='spline'))
  
 	fig.update_xaxes(
@@ -118,7 +115,7 @@ app.layout = html.Div(
                      interval=1*2000,
                      n_intervals=0),
         dcc.Interval(id='download-component',
-                     interval=1*500,
+                     interval=1*1000,
                      n_intervals=0),
 
         html.Main(className='main-container', children=[
@@ -255,13 +252,20 @@ app.layout = html.Div(
                 dcc.Graph(id='linear-graph')
             ])
         ]),
+        html.Div(id='hidden-div', style={'display':'none'}),
 		html.Footer(className='footer', children=[
             html.P('PW EE 2020/2021'),
             html.P('Made by: Łukasz Glapiak and Maciej Leszczyński')
         ])
     ])
 
-#callbacks	
+@app.callback(Output('hidden-div', 'children'),
+    Input('download-component', 'n_intervals'))
+def get_data_from_api(_):
+    db.save_users_sensor_values()
+    return ''
+
+
 @app.callback(Output('current-person-id', 'data'),
     Input('person-dropdown', 'value'))
 def on_person_change(new_person_id):
@@ -287,17 +291,15 @@ def updateData(n, person_id, data, columns):
 	[Input('update-component', 'n_intervals'),
 	Input('person-dropdown', 'value')])
 def update_foot_image(_, dropdown_value):
-    db.save_users_sensor_values() #tymczasowo
     return feet_image(get_sensor_values(dropdown_value))
     
 @app.callback(Output('linear-graph', 'figure'),
 	[Input('update-component', 'n_intervals'),
-	Input('download-component', 'n_intervals'),
     Input('person-dropdown', 'value'),
     Input('sensor-dropdown', 'value')])
-def update_linear_graph(up, down, person, sensors):
-	values = fetch_data(person, down)
-	return linear_graph(person, sensors, up, values)
+def update_linear_graph(up, person, sensors):
+	values = fetch_data(person, 20)
+	return linear_graph(sensors, values)
 
 if __name__ == '__main__':
     app.run_server(host='0.0.0.0', debug=True)
