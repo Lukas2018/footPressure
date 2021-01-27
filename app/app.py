@@ -81,13 +81,23 @@ def feet_image(sensors):
     
     return fig
   
-
-def linear_graph(person_id, sensor_values, n):
+def fetch_data(person_id, n):
+	data = []
+	dates = []
+	for sensor in range(0, 6):
+		data.append(db.get_user_sensor_data(person_id, sensor, n, 'value'))
+		dates.append(db.get_user_sensor_data(person_id, sensor, n, 'date'))
+	
+	return [data, dates]
+		
+def linear_graph(person_id, sensor_values, n, values):
+	data = values[0]
+	dates = values[1]
 	fig = go.Figure()
 	for sensor in sensor_values:
-		data = db.get_user_sensor_data(person_id, sensor, n, 'value')
-		dates = db.get_user_sensor_data(person_id, sensor, n, 'date')
-		fig.add_trace(go.Scatter(x=dates, y=data))
+		#data = db.get_user_sensor_data(person_id, sensor, 5, 'value')
+		#dates = db.get_user_sensor_data(person_id, sensor, 5, 'date')
+		fig.add_trace(go.Scatter(x=dates[sensor], y=data[sensor], line_shape='spline'))
  
 	fig.update_xaxes(
 		tickangle = 55)
@@ -105,7 +115,10 @@ app.layout = html.Div(
         # Store last anomaly
         dcc.Store(id='last-anomaly'),
 
-        dcc.Interval(id='interval-component',
+        dcc.Interval(id='update-component',
+                     interval=1*2000,
+                     n_intervals=0),
+        dcc.Interval(id='download-component',
                      interval=1*1000,
                      n_intervals=0),
 
@@ -256,7 +269,7 @@ def on_person_change(new_person_id):
 	return new_person_id
 
 @app.callback(Output('stat-data-table', 'data'),
-    Input('interval-component', 'n_intervals'),
+    Input('update-component', 'n_intervals'),
     [State('stat-data-table', 'data'), State('stat-data-table', 'columns')]
 )
 def updateData(n, data, columns):
@@ -264,18 +277,20 @@ def updateData(n, data, columns):
     return data
 
 @app.callback(Output('foot-image', 'figure'),
-	[Input('interval-component', 'n_intervals'),
+	[Input('update-component', 'n_intervals'),
 	Input('person-dropdown', 'value')])
 def update_foot_image(_, dropdown_value):
     db.save_users_sensor_values() #tymczasowo
     return feet_image(get_sensor_values(dropdown_value))
     
 @app.callback(Output('linear-graph', 'figure'),
-	[Input('interval-component', 'n_intervals'),
+	[Input('update-component', 'n_intervals'),
+	Input('download-component', 'n_intervals'),
     Input('person-dropdown', 'value'),
     Input('sensor-dropdown', 'value')])
-def update_linear_graph(_, dropdown_value, sensor_dropdown_value):
-	return linear_graph(dropdown_value, sensor_dropdown_value, (_+1))
+def update_linear_graph(up, down, person, sensors):
+	values = fetch_data(person, down)
+	return linear_graph(person, sensors, up, values)
 
 if __name__ == '__main__':
     app.run_server(host='0.0.0.0', debug=True)
