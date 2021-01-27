@@ -2,6 +2,6 @@ dash
 Flask
 numpy
 pandas
-plotly
+plotly==4.9.0
 redis
 requests
