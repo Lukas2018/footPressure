@@ -25,15 +25,12 @@ db.init_patients()
 db.save_users_sensor_values()
 sensor_names = ['L1', 'L2', 'L3', 'R1', 'R2', 'R3']
 
-#sensory zwraca
 def get_sensor_values(person_id):
     sensors = []
     for i in range(0, config.get_sensors_number()):
         sensors.append(db.get_user_sensor_data(person_id, i, 1)[0])
-    print(db.get_anomaly_counts())
     return sensors
     
-#ten obrazek stopy z sensorami na nim
 def feet_image(sensors):
     img_width = 500
     img_height = 600
@@ -114,10 +111,7 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 app.layout = html.Div(
     className='content',
     children=[
-        # Store current person id
         dcc.Store(id='current-person-id', storage_type='session'),
-        # Store last anomaly
-        dcc.Store(id='last-anomaly'),
 
         dcc.Interval(id='update-component',
                      interval=1*1000,
@@ -135,10 +129,9 @@ app.layout = html.Div(
                     {'label': db.get_patient_personal_data(6), 'value': 6},
                 ],
                 value=1,
-                placeholder='Select a person'
+                clearable=False,
             ),
             html.Section(className='visualization-container', children=[
-                #niżej na razie przykładowe person id 1, potem z dropdown polaczymy
                 dash_table.DataTable(
                     id='stat-data-table',
                     style_cell={
@@ -254,9 +247,6 @@ app.layout = html.Div(
                         ]),
                     ])
                 ]),
-                
-                #dcc.Graph(id='linear-graph', figure=linear_graph(1, [0, 1, 2, 3, 4, 5]))
-                
             ])
         ]),
         html.Div(id='hidden-div', style={'display':'none'}),
@@ -271,7 +261,6 @@ app.layout = html.Div(
 def get_data_from_api(_):
     db.save_users_sensor_values()
     return ''
-
 
 @app.callback(Output('current-person-id', 'data'),
     Input('person-dropdown', 'value'))

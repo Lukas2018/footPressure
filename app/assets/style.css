@@ -1,10 +1,12 @@
 .foot-anomaly-container {
     display: flex;
     justify-content: space-around;
+    margin-bottom: 20px;
 }
 .anomaly-container {
     align-self: center;
 }
+
 .anomaly-container div {
     display: flex;
     justify-content: space-evenly;
@@ -17,8 +19,23 @@
     text-align: center;
 }
 
+#person-dropdown {
+    margin-bottom: 20px;
+}
+
+#stat-data-table {
+    margin-bottom: 20px;
+    margin-left: 5%;
+    margin-right: 5%;
+}
+
+#linear-graph {
+    margin-bottom: 20px;
+}
+
 .footer {
     text-align: center;
+    margin-bottom: 10px;
 }
 
 .footer p:first-child {
