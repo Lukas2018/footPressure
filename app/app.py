@@ -101,7 +101,16 @@ def linear_graph(sensor_values, values):
 	fig.update_xaxes(
 		tickangle = 55)
 		
-	fig.update_layout(height=350)
+	fig.update_layout(title='Last 20 values of sensors')
+	return fig
+	
+def anomaly_histogram(person_id):
+	anomalies = db.get_anomaly_counts(person_id)
+	fig = go.Figure()
+	fig.add_trace(go.Bar(x=sensor_names, y=anomalies, marker_color='indianred'))
+	
+	fig.update_layout(width = 600, title='Anomaly histogram')
+	
 	return fig
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -217,36 +226,8 @@ app.layout = html.Div(
 					multi=True
 				),
                 dcc.Graph(id='linear-graph'),
-                html.Div(className='foot-anomaly-container', children=[
-                    dcc.Graph(id='foot-image', config={'displayModeBar': False}, figure=feet_image(get_sensor_values(1))),
-                    html.Div(className='anomaly-container', children=[
-                        html.H3('Anomaly counter'),
-                        html.Div(children=[
-                            html.P('L1:'),
-                            html.P('56')
-                        ]),
-                        html.Div(children=[
-                            html.P('L2:'),
-                            html.P('26')
-                        ]),
-                        html.Div(children=[
-                            html.P('L3:'),
-                            html.P('16')
-                        ]),
-                        html.Div(children=[
-                            html.P('L4:'),
-                            html.P('45')
-                        ]),
-                        html.Div(children=[
-                            html.P('L5:'),
-                            html.P('12')
-                        ]),
-                        html.Div(children=[
-                            html.P('L6:'),
-                            html.P('14')
-                        ]),
-                    ])
-                ]),
+                dcc.Graph(id='foot-image', config={'displayModeBar': False}, figure=feet_image(get_sensor_values(1))),
+                dcc.Graph(id='histogram')
             ])
         ]),
         html.Div(id='hidden-div', style={'display':'none'}),
@@ -296,6 +277,12 @@ def update_foot_image(_, dropdown_value):
 def update_linear_graph(up, person, sensors):
 	values = fetch_data(person, 20)
 	return linear_graph(sensors, values)
+	
+@app.callback(Output('histogram', 'figure'),
+	[Input('update-component', 'n_intervals'),
+    Input('person-dropdown', 'value')])
+def update_histogram(up, person):
+	return anomaly_histogram(person)
 
 if __name__ == '__main__':
     app.run_server(host='0.0.0.0', debug=True)
