@@ -29,6 +29,7 @@ def get_sensor_values(person_id):
     sensors = []
     for i in range(0, config.get_sensors_number()):
         sensors.append(db.get_user_sensor_data(person_id, i, 1)[0])
+    print(db.get_anomaly_counts())
     return sensors
     
 #ten obrazek stopy z sensorami na nim

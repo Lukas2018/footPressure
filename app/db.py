@@ -46,6 +46,13 @@ class Redis(object):
                         data[str(n)][str(j)]['date'] = datetime.now().strftime('%H:%M:%S')
                         data[str(n)][str(j)]['name'] = content[j]['name']
                         data[str(n)][str(j)]['value'] = int(content[j]['value'])
+                        if data[str(n)][str(j)]['anomaly'] == 1:
+                            number = self.redis.hget('anomaly', str(j))
+                            if number == None:
+                                number = 1
+                            else:
+                                number = int(number) + 1
+                            self.redis.hset('anomaly', str(j), number)
                     self.redis.rpush(str(i), json.dumps(data))
             except requests.ConnectionError:
                 return
@@ -68,4 +75,13 @@ class Redis(object):
                 results.append(values[str(sensor_id)])
             else:
                 results.append(values[str(sensor_id)][key])
+        return results
+
+    def get_anomaly_counts(self):
+        results = []
+        for i in range(self.config.get_sensors_number()):
+            number = self.redis.hget('anomaly', str(i))
+            if number == None:
+                number = 0
+            results.append(number)
         return results
