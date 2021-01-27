@@ -23,6 +23,7 @@ db = Redis(redis, config)
 stat = Stats(db)
 db.init_patients()
 db.save_users_sensor_values()
+sensor_names = ['L1', 'L2', 'L3', 'R1', 'R2', 'R3']
 
 #sensory zwraca
 def get_sensor_values(person_id):
@@ -65,17 +66,21 @@ def feet_image(sensors):
     )
 
     fig.update_layout(
-        width=img_width,
-        height=img_height,
+        width=img_width-20,
+        height=img_height-108,
         margin={"l": 0, "r": 0, "t": 0, "b": 0},
     )
     
-    positions = [(335, 420), (165, 420), (60, 350), (440, 350), (140, 60), (360, 60)]
+    positions = [(165, 420), (60, 350), (140, 60), (335, 420), (440, 350), (360, 60)]
     for i in range(0, config.get_sensors_number()):
+        if (int)(sensors[i]['value']) < 600:
+            size = 30
+        else:
+            size = (int)(sensors[i]['value'])/18
         fig.add_trace(
             go.Scatter(
-                x=[positions[i][0]], y=[positions[i][1]], mode="markers+text", marker = dict(size = 40),
-                text = sensors[i]['value'], textfont = dict(color="white")
+                x=[positions[i][0]], y=[positions[i][1]], mode="markers+text", marker = dict(size = size),
+                text = sensors[i]['value'], textfont = dict(color="white"), name = sensor_names[i]
             )   
         )
     
@@ -94,10 +99,12 @@ def linear_graph(sensor_values, values):
 	dates = values[1]
 	fig = go.Figure()
 	for sensor in sensor_values:
-		fig.add_trace(go.Scatter(x=dates[sensor], y=data[sensor], line_shape='spline'))
+		fig.add_trace(go.Scatter(x=dates[sensor], y=data[sensor], name=sensor_names[sensor]))
  
 	fig.update_xaxes(
 		tickangle = 55)
+		
+	fig.update_layout(height=350)
 	return fig
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -113,9 +120,6 @@ app.layout = html.Div(
         dcc.Store(id='last-anomaly'),
 
         dcc.Interval(id='update-component',
-                     interval=1*2000,
-                     n_intervals=0),
-        dcc.Interval(id='download-component',
                      interval=1*1000,
                      n_intervals=0),
 
@@ -142,7 +146,7 @@ app.layout = html.Div(
                         'maxWidth': 0
                     },
                     columns=[{
-                        'name': '',
+                        'name': 'Sensor',
                         'id': 'stat-name'
                     },    
                     {
@@ -206,6 +210,20 @@ app.layout = html.Div(
                         '5': 1023
                     }]
                 ),
+                dcc.Dropdown(
+					id='sensor-dropdown',
+					options=[
+						{'label': 'Sensor L1', 'value': 0},
+						{'label': 'Sensor L2', 'value': 1},
+						{'label': 'Sensor L3', 'value': 2},
+						{'label': 'Sensor R1', 'value': 3},
+						{'label': 'Sensor R2', 'value': 4},
+						{'label': 'Sensor R3', 'value': 5},
+					],
+					value=[0, 1, 2, 3, 4, 5],
+					multi=True
+				),
+                dcc.Graph(id='linear-graph'),
                 html.Div(className='foot-anomaly-container', children=[
                     dcc.Graph(id='foot-image', config={'displayModeBar': False}, figure=feet_image(get_sensor_values(1))),
                     html.Div(className='anomaly-container', children=[
@@ -236,21 +254,9 @@ app.layout = html.Div(
                         ]),
                     ])
                 ]),
-                dcc.Dropdown(
-					id='sensor-dropdown',
-					options=[
-						{'label': 'Sensor 1', 'value': 0},
-						{'label': 'Sensor 2', 'value': 1},
-						{'label': 'Sensor 3', 'value': 2},
-						{'label': 'Sensor 4', 'value': 3},
-						{'label': 'Sensor 5', 'value': 4},
-						{'label': 'Sensor 6', 'value': 5},
-					],
-					value=[0, 1, 2, 3, 4, 5],
-					multi=True
-				),
+                
                 #dcc.Graph(id='linear-graph', figure=linear_graph(1, [0, 1, 2, 3, 4, 5]))
-                dcc.Graph(id='linear-graph')
+                
             ])
         ]),
         html.Div(id='hidden-div', style={'display':'none'}),
@@ -261,7 +267,7 @@ app.layout = html.Div(
     ])
 
 @app.callback(Output('hidden-div', 'children'),
-    Input('download-component', 'n_intervals'))
+    Input('update-component', 'n_intervals'))
 def get_data_from_api(_):
     db.save_users_sensor_values()
     return ''
