@@ -33,7 +33,7 @@ class Redis(object):
                 for j in range(len(content)):
                     table_name = 'user' + str(i) + 'sensor' + str(content[j]['id']) + 'measurment' + str(self.measurments_count)
                     self.redis.hset(table_name, 'anomaly', int(content[j]['anomaly']))
-                    self.redis.hset(table_name, 'date', datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+                    self.redis.hset(table_name, 'date', datetime.now().strftime('%H:%M:%S'))
                     self.redis.hset(table_name, 'name', content[j]['name'])
                     self.redis.hset(table_name, 'value', int(content[j]['value']))
         self.measurments_count = self.measurments_count + 1

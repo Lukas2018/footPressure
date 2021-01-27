@@ -29,7 +29,6 @@ def get_sensor_values(person_id):
     sensors = []
     for i in range(0, config.get_sensors_number()):
         sensors.append(db.get_user_sensor_data(person_id, i, 1)[0])
-    #print('sen2{}'.format(db.get_user_sensors_data(person_id, 3, 'value'))) # tu masz wszystki wartości z sensorów w danej chwili czasu
     return sensors
     
 #ten obrazek stopy z sensorami na nim
